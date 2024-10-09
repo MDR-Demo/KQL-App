@@ -66,21 +66,21 @@
         <li><a href="heartbeatLatency.html">Heartbeat Latency Query</a></li>
     </ul>
     <div class="footer">Created by Manikandan Velayutham</div>
-    <div class="tips" id="securityTips">Loading security tips...</div>
+    <div class="tips" id="securityTips">Loading proverbs...</div>
 
     <script>
-        async function fetchSecurityTips() {
+        async function fetchProverbs() {
             try {
-                const response = await fetch('https://api.adviceslip.com/advice'); // Public API for random advice
+                const response = await fetch('https://proverbs-api.herokuapp.com/api/proverb'); // Public API for random proverbs
                 const data = await response.json();
-                const tip = data.slip.advice;
-                document.getElementById('securityTips').textContent = tip;
+                const proverb = data.proverb;
+                document.getElementById('securityTips').textContent = proverb;
             } catch (error) {
-                document.getElementById('securityTips').textContent = 'Failed to load security tips.';
+                document.getElementById('securityTips').textContent = 'Failed to load proverbs.';
             }
         }
 
-        fetchSecurityTips();
+        fetchProverbs();
     </script>
 </body>
 </html>
