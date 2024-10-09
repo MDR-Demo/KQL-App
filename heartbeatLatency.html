@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heartbeat Latency Query</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-image: url('https://wallpapers.com/images/high/world-map-cyber-security-ivcowv89j1g1ff4m.webp');
+            background-size: cover;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+        form {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 20px;
+            border-radius: 10px;
+            display: inline-block;
+            text-align: left;
+        }
+        label, select, input, textarea, button {
+            display: block;
+            margin: 10px 0;
+            width: 100%;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        pre {
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            text-align: left;
+        }
+        .footer {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            font-size: small;
+        }
+        .back-button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-bottom: 20px;
+        }
+        .back-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <button class="back-button" onclick="goBack()">Go Back</button>
+    <h1>Heartbeat Latency Query</h1>
+    <form id="heartbeatLatencyForm">
+        <label for="hostType">Select Host Type:</label>
+        <select id="hostType" name="hostType" onchange="toggleHostInput()">
+            <option value="single">Single Host</option>
+            <option value="multiple">Multiple Hosts</option>
+        </select>
+
+        <div id="hostInput">
+            <label for="hosts">Enter Hostname(s):</label>
+            <textarea id="hosts" name="hosts" rows="5" placeholder="Enter one hostname per line" required></textarea>
+        </div>
+
+        <div id="exclusionInput" style="display:none;">
+            <label for="excludedHosts">Enter Excluded Hostname(s):</label>
+            <textarea id="excludedHosts" name="excludedHosts" rows="3" placeholder="Enter excluded hostnames (one per line)"></textarea>
+        </div>
+
+        <button type="button" onclick="generateHeartbeatLatencyQuery()">Generate Query</button>
+    </form>
+
+    <h2>Generated KQL for Below Hosts:</h2>
+    <pre id="kqlOutput"></pre>
+    <button onclick="copyKQLToClipboard()">Copy KQL Query</button>
+
+    <h2>Email Statement:</h2>
+    <pre id="emailOutput"></pre>
+    <button onclick="copyEmailToClipboard()">Copy Email Statement</button>
+
+    <div class="footer">Created by Manikandan Velayutham</div>
+
+    <script>
+        function goBack() {
+            window.location.href = 'index.html';
+        }
+
+        function toggleHostInput() {
+            const hostType = document.getElementById('hostType').value;
+            document.getElementById('hosts').placeholder = hostType === 'single' ? "Enter single hostname" : "Enter one hostname per line";
+            document.getElementById('exclusionInput').style.display = hostType === 'multiple' ? 'block' : 'none';
+        }
+
+        function generateHeartbeatLatencyQuery() {
+            const hostsInput = document.getElementById('hosts').value.trim();
+            const hostsArray = hostsInput.split('\n').map(host => host.replace(/ - .*/, '').trim()).filter(host => host);
+
+            const excludedInput = document.getElementById('excludedHosts').value.trim();
+            const excludedArray = excludedInput.split('\n').map(host => host.trim()).filter(host => host);
+
+            const filteredHostsArray = hostsArray.filter(host => !excludedArray.includes(host));
+
+            const latencyHostCondition = filteredHostsArray.map(host => `Computer has "${host}"`).join(' or ');
+            const query = `
+                Heartbeat
+                | where TimeGenerated > ago(48h)
+                | where ${latencyHostCondition}
+                | extend E2EIngestionLatency = ingestion_time() - TimeGenerated
+                | extend AgentLatency = ingestion_time() - TimeGenerated
+                | extend AgentLatencyMin = todouble(datetime_diff("Second", ingestion_time(), TimeGenerated)) / 60
+                | extend AgentLatencyHMS = format_timespan(AgentLatency, 'h:m:s')
+                | summarize 
+                    percentiles(E2EIngestionLatency, 50, 95),
+                    percentiles(AgentLatency, 50, 95)
+                    by bin(TimeGenerated, 30m), Computer, AgentLatencyHMS
+            `;
+
+            document.getElementById('kqlOutput').textContent = query;
+
+            const emailStatement = `Hello Team,\n\nGreetings of the day!\n\nWe have received a "Security Alert - CLIENT-AgentHeartbeatLatency".\n\nEntity involved in the alert:\n\nHostname: \n\nInvestigation:\nWe have identified a more than 6-second latency in emitting heartbeat logs for the following hosts.\n\nA significant increase in latency could indicate:\nAn overloaded agent host\nAn overloaded VPN (if applicable)\nAn issue with site internet connectivity (for on-prem agents)\nAn issue with the agent host\nA large volume of logs\nAn issue with Log Analytics\nA significant time change on the agent host (ensure NTP is used, if possible)\nPlease find the attached CSV file for your reference. We suggest validating the latency on the affected hosts.\n\nKind regards,`;
+
+            document.getElementById('emailOutput').textContent = emailStatement;
+        }
+
+        function copyKQLToClipboard() {
+            const queryOutput = document.getElementById('kqlOutput').textContent;
+            navigator.clipboard.writeText(queryOutput).then(() => { alert('KQL Query copied to clipboard!'); }, (err) => { console.error('Could not copy text:', err); });
+        }
+
+        function copyEmailToClipboard() {
+            const emailOutput = document.getElementById('emailOutput').textContent;
+            navigator.clipboard.writeText(emailOutput).then(() => { alert('Email Statement copied to clipboard!'); }, (err) => { console.error('Could not copy text:', err); });
+        }
+    </script>
+</body>
+</html>
