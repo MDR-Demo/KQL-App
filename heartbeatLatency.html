@@ -132,7 +132,7 @@
 
             document.getElementById('kqlOutput').textContent = query;
 
-            const emailStatement = `Hello Team,\n\nGreetings of the day!\n\nWe have received a "Security Alert - CLIENT-AgentHeartbeatLatency".\n\nEntity involved in the alert:\n\nHostname: \n\nInvestigation:\nWe have identified a more than 6-second latency in emitting heartbeat logs for the following hosts.\n\nA significant increase in latency could indicate:\nAn overloaded agent host\nAn overloaded VPN (if applicable)\nAn issue with site internet connectivity (for on-prem agents)\nAn issue with the agent host\nA large volume of logs\nAn issue with Log Analytics\nA significant time change on the agent host (ensure NTP is used, if possible)\nPlease find the attached CSV file for your reference. We suggest validating the latency on the affected hosts.\n\nKind regards,`;
+            const emailStatement = `Hello Team,\n\nGreetings of the day!\n\nWe have received a "Security Alert - CLIENT-AgentHeartbeatLatency".\n\nEntity involved in the alert:\n\nHostname: \n\nInvestigation:\nWe have identified a more than 6-second latency in emitting heartbeat logs for the following hosts.\n\nA significant increase in latency could indicate:\nAn overloaded agent host\nAn overloaded VPN (if applicable)\nAn issue with site internet connectivity (for on-prem agents)\nAn issue with the agent host\nA large volume of logs\nAn issue with Log Analytics\nA significant time change on the agent host (ensure NTP is used, if possible)\nPlease find the attachment for your reference. We suggest validating the latency on the affected hosts.\n\nKind regards,`;
 
             document.getElementById('emailOutput').textContent = emailStatement;
         }
