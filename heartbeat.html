@@ -116,7 +116,7 @@
             const filteredHostsArray = hostsArray.filter(host => !excludedArray.includes(host));
 
             const hostCondition = filteredHostsArray.map(host => `Computer has "${host}"`).join(' or ');
-            const query = `Heartbeat\n| where ${hostCondition}\n| summarize max(TimeGenerated) by Computer\n| extend Howlongago=(now() - max_TimeGenerated)\n| extend Array1 = split(Howlongago, ":")\n| extend hrs = Array1\n| extend mins = Array1\n| extend sec = Array1\n| extend howlongsincelastlog = strcat(hrs," hrs ", mins, " mins ", sec, " sec ")\n| project max_TimeGenerated, Computer, Howlongago, howlongsincelastlog`;
+            const query = `Heartbeat\n| where ${hostCondition}\n| summarize max(TimeGenerated) by Computer\n| extend Howlongago=(now() - max_TimeGenerated)\n| extend Array1 = split(Howlongago, ":")\n| extend hrs = Array1[0]\n| extend mins = Array1[1]\n| extend sec = Array1[2]\n| extend howlongsincelastlog = strcat(hrs," hrs ", mins, " mins ", sec, " sec ")\n| project max_TimeGenerated, Computer, Howlongago, howlongsincelastlog`;
 
             document.getElementById('kqlOutput').textContent = query;
 
