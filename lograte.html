@@ -124,9 +124,23 @@
 
             const filteredHostsArray = hostsArray.filter(host => !excludedArray.includes(host));
 
-            let usualQuery = `${logTable}\n| where TimeGenerated >= ago(7d)\n| where ${filteredHostsArray.map(host => `Computer has "${host}"`).join(' or ')}\n| summarize count() by bin(TimeGenerated, 1d), Computer\n| render timechart`;
+            let usualQuery = `${logTable}
+| where TimeGenerated >= ago(7d)
+| where ${filteredHostsArray.map(host => `Computer has "${host}"`).join(' or ')}
+| summarize count() by bin(TimeGenerated, 1d), Computer
+| render timechart`;
 
-            let noLogsQuery = `${logTable}\n| where TimeGenerated >= ago(7d)\n| where ${filteredHostsArray.map(host => `Computer has "${host}"`).join(' or ')}\n| summarize max(TimeGenerated) by Computer\n| extend Howlongago=(now() - max_TimeGenerated)\n| extend Array1 = split(Howlongago, ":")\n| extend hrs = Array1\n| extend mins = Array1\n| extend sec = Array1\n| extend howlongsincelastlog = strcat(hrs," hrs ", mins, " mins ", sec, " sec ")\n| project max_TimeGenerated, Computer, Howlongago, howlongsincelastlog`;
+            let noLogsQuery = `${logTable}
+| where TimeGenerated >= ago(7d)
+| where ${filteredHostsArray.map(host => `Computer has "${host}"`).join(' or ')}
+| summarize max(TimeGenerated) by Computer
+| extend Howlongago=(now() - max_TimeGenerated)
+| extend Array1 = split(Howlongago, ":")
+| extend hrs = Array1
+| extend mins = Array1
+| extend sec = Array1
+| extend howlongsincelastlog = strcat(hrs," hrs ", mins, " mins ", sec, " sec ")
+| project max_TimeGenerated, Computer, Howlongago, howlongsincelastlog`;
 
             document.getElementById('kqlOutput').textContent = `Usual Query:\n${usualQuery}\n\nIf we are no longer receiving logs:\n${noLogsQuery}`;
         }
@@ -140,7 +154,7 @@
             if (emailType === 'fewerLogs') {
                 emailStatement = `Hello Team,\n\nGreetings of the day!\n\nWe appear to be receiving fewer logs than usual from table "${logTable}" from the following source:\n\nHostname: \nCount:\nDate:\n\nHostname: \nCount:\nDate:\n\nThe NTT MDR team recommends that the team(s) responsible for each device:\n1) Review the status of the system.\n2) Whether the system is correctly set up to send security logs to NTT (this might be via a log forwarder).\n3) Whether the system should not be monitored for regular logs (e.g., it's a test system or is offline for a period).\n`;
             } else if (emailType === 'noLogs') {
-                emailStatement = `Hello Team,\n\nGreetings of the day!\n\nWe appear to be No Longer receiving logs from table "${logTable}" from the following source:\n\nComputer - \nTable - \nLastLog [UTC] - \nLast Log Since - \n\nThe NTT MDR team recommends that the team(s) responsible for each device:\n1) Review the status of the system.\n2) Whether the system is correctly set up to send security logs to NTT (this might be via a log forwarder).\n3) Whether the system should not be monitored for regular logs (e.g., it's a test system or is offline for a period).\n`;
+                emailStatement = `Hello Team,\n\nGreetings of the day!\n\nWe appear to be no longer receiving logs from table "${logTable}" from the following source:\n\nComputer - \nTable - \nLastLog [UTC] - \nLast Log Since - \n\nThe NTT MDR team recommends that the team(s) responsible for each device:\n1) Review the status of the system.\n2) Whether the system is correctly set up to send security logs to NTT (this might be via a log forwarder).\n3) Whether the system should not be monitored for regular logs (e.g., it's a test system or is offline for a period).\n`;
             }
 
             document.getElementById('emailOutput').textContent = emailStatement;
