@@ -136,9 +136,9 @@
 | summarize max(TimeGenerated) by Computer
 | extend Howlongago=(now() - max_TimeGenerated)
 | extend Array1 = split(Howlongago, ":")
-| extend hrs = Array1
-| extend mins = Array1
-| extend sec = Array1
+| extend hrs = Array1[0]
+| extend mins = Array1[1]
+| extend sec = Array1[2]
 | extend howlongsincelastlog = strcat(hrs," hrs ", mins, " mins ", sec, " sec ")
 | project max_TimeGenerated, Computer, Howlongago, howlongsincelastlog`;
 
